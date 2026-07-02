@@ -4,6 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI将棋</title>
+  <base id="app-base" href="/aisyougi/">
+  <script>
+    (function () {
+      var host = location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        var path = location.pathname.replace(/[^/]*$/, '');
+        document.getElementById('app-base').href = path || '/';
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +29,17 @@
     <div id="status" class="status">あなたの番</div>
 
     <div class="game-area">
-      <div id="gote-hand" class="hand gote-hand"></div>
+      <div class="gote-area">
+        <img
+          id="ai-icon"
+          class="ai-icon"
+          src="assets/ai-icon.png"
+          alt="AI対戦相手"
+          width="72"
+          height="72"
+        >
+        <div id="gote-hand" class="hand gote-hand"></div>
+      </div>
 
       <div class="board-wrapper">
         <div class="board-labels">

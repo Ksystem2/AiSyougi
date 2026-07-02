@@ -75,6 +75,44 @@ header h1 {
   align-items: center;
 }
 
+.gote-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.ai-icon {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e67e22;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  background: #fff;
+}
+
+.ai-icon.thinking {
+  animation: ai-pulse 1s ease-in-out infinite;
+}
+
+@keyframes ai-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 4px 20px rgba(230, 126, 34, 0.55);
+  }
+}
+
+.gote-hand {
+  flex: 1;
+  min-width: 0;
+}
+
 .hand {
   width: 100%;
   background: var(--surface);

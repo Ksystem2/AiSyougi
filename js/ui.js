@@ -18,6 +18,7 @@ export class ShogiUI {
     this.boardEl = document.getElementById('board');
     this.senteHandEl = document.getElementById('sente-hand');
     this.goteHandEl = document.getElementById('gote-hand');
+    this.aiIconEl = document.getElementById('ai-icon');
     this.statusEl = document.getElementById('status');
     this.promoModal = document.getElementById('promotion-modal');
     this.promoYes = document.getElementById('promo-yes');
@@ -47,6 +48,7 @@ export class ShogiUI {
 
   _renderStatus() {
     if (this.board.gameOver) {
+      this.aiIconEl?.classList.remove('thinking');
       if (this.board.winner === SENTE) {
         this.statusEl.textContent = 'あなたの勝ち！';
       } else if (this.board.winner === GOTE) {
@@ -57,10 +59,12 @@ export class ShogiUI {
       return;
     }
     if (this.board.turn === SENTE) {
+      this.aiIconEl?.classList.remove('thinking');
       this.statusEl.textContent = this.board.isInCheck(SENTE)
         ? 'あなたの番（王手！）'
         : 'あなたの番';
     } else {
+      this.aiIconEl?.classList.add('thinking');
       this.statusEl.textContent = 'AIが考え中…';
     }
   }
