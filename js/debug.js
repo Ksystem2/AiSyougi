@@ -71,6 +71,7 @@ export function mountDebugPanel() {
     document.body.classList.toggle('debug-expanded', !collapsed);
     const btn = panelEl?.querySelector('#debug-toggle');
     if (btn) btn.textContent = collapsed ? '開く' : '閉じる';
+    window.dispatchEvent(new Event('aisyougi:relayout'));
   });
 
   render();

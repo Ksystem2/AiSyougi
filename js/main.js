@@ -13,11 +13,13 @@ import {
   setDebugError,
   isDebugMode,
 } from './debug.js';
+import { initResponsiveLayout } from './layout.js';
 
 installGlobalErrorHandlers();
 if (isDebugMode()) {
   mountDebugPanel();
 }
+const relayout = initResponsiveLayout();
 
 const LEVEL_STORAGE_KEY = 'aisyougi-ai-level';
 
@@ -58,6 +60,7 @@ function init() {
     ui.render();
     updateDebugPosition();
     setDebugInit('OK');
+    relayout();
     verifyEngine();
   } catch (err) {
     setDebugInit('FAILED');
