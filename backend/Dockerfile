@@ -16,13 +16,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget ca-certificates p7zip-full findutils \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /eval \
-    && wget -q -O /tmp/yaneuraou.7z \
-       "https://github.com/yaneurao/YaneuraOu/releases/download/v8.30git/yaneuraou-V830-git-win64-all.7z" \
-    && 7z x /tmp/yaneuraou.7z -o/tmp/extract -y \
-    && EVAL="$(find /tmp/extract -type f \( -name '*.bin' -o -name '*.nnue' \) -size +500k | head -1)" \
-    && test -n "$EVAL" \
-    && cp "$EVAL" /eval/nn.bin \
-    && ls -la /eval/nn.bin
+    && wget -q -O /tmp/Suisho5.7z \
+       "https://github.com/yaneurao/YaneuraOu/releases/download/suisho5/Suisho5.7z" \
+    && 7z x /tmp/Suisho5.7z -o/eval -y \
+    && test -f /eval/nn.bin \
+    && printf 'FV_SCALE = 24\n' > /eval/eval_options.txt \
+    && ls -la /eval/
 
 FROM python:3.12-slim-bookworm AS runtime
 WORKDIR /app
@@ -38,6 +37,7 @@ COPY backend ./backend
 RUN mkdir -p /app/engine/eval
 COPY --from=engine-builder /tmp/YaneuraOu /app/engine/YaneuraOu
 COPY --from=eval-fetch /eval/nn.bin /app/engine/eval/nn.bin
+COPY --from=eval-fetch /eval/eval_options.txt /app/engine/eval/eval_options.txt
 
 ENV YANEURAOU_PATH=/app/engine/YaneuraOu
 ENV YANEURAOU_CWD=/app/engine
