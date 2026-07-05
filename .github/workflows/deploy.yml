@@ -35,7 +35,8 @@ jobs:
             --exclude ".git/*" \
             --exclude ".github/*" \
             --exclude "infra/*" \
-            --exclude ".gitignore" \`n            --exclude ".gitattributes" \
+            --exclude ".gitignore" \
+            --exclude ".gitattributes" \
             --exclude "*.zip" \
             --exclude "sticker-fn.js" \
             --exclude "aisyougi-fn-live.js" \
