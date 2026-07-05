@@ -21,12 +21,30 @@
 </head>
 <body>
   <div class="app">
-    <header>
-      <h1>AI将棋</h1>
-      <p class="subtitle">先手（あなた） vs 後手（AI）</p>
+    <header class="top-bar">
+      <div class="top-bar-title">
+        <h1>AI将棋</h1>
+        <p class="subtitle">先手 vs 後手（AI）</p>
+      </div>
+      <div id="status" class="status">あなたの番</div>
     </header>
 
-    <div id="status" class="status">あなたの番</div>
+    <div id="clock-panel" class="clock-panel">
+      <div class="clock-item" id="clock-row-sente">
+        <span class="clock-label">先手</span>
+        <span id="clock-sente" class="clock-value">0:00</span>
+        <span id="clock-sente-last" class="clock-last"></span>
+      </div>
+      <div class="clock-item" id="clock-row-gote">
+        <span class="clock-label">後手</span>
+        <span id="clock-gote" class="clock-value">0:00</span>
+        <span id="clock-gote-last" class="clock-last"></span>
+      </div>
+      <div class="clock-item clock-total">
+        <span class="clock-label">対局</span>
+        <span id="clock-total" class="clock-value">0:00</span>
+      </div>
+    </div>
 
     <div class="game-area">
       <div class="gote-area">
@@ -35,8 +53,8 @@
           class="ai-icon"
           src="assets/ai-icon.png"
           alt="AI対戦相手"
-          width="72"
-          height="72"
+          width="40"
+          height="40"
         >
         <div id="gote-hand" class="hand gote-hand"></div>
       </div>
@@ -61,12 +79,12 @@
     </div>
 
     <div class="controls">
+      <div class="level-select">
+        <label for="ai-level">AI</label>
+        <select id="ai-level" aria-label="AIの強さ"></select>
+      </div>
       <button id="new-game" type="button" class="btn-primary">新しい対局</button>
     </div>
-
-    <footer class="help">
-      <p>駒をクリックして選択 → 移動先をクリック。持ち駒をクリックして打つこともできます。</p>
-    </footer>
   </div>
 
   <div id="promotion-modal" class="modal hidden">

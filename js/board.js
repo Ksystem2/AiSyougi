@@ -1,4 +1,5 @@
 import { SENTE, GOTE, PIECE, HAND_TYPES, BOARD_SIZE } from './constants.js';
+import { boardToSfen, moveToUsiForHistory, usiToMove, INITIAL_SFEN } from './sfen.js';
 
 /** @typedef {{ type: string, owner: string, promoted: boolean }} Piece */
 
@@ -36,6 +37,7 @@ export class ShogiBoard {
     this.gameOver = false;
     this.winner = null;
     this._setupInitialPosition();
+    this._refreshKingPos();
   }
 
   _setupInitialPosition() {
@@ -88,6 +90,93 @@ export class ShogiBoard {
 
   opponent(owner) {
     return owner === SENTE ? GOTE : SENTE;
+  }
+
+  _refreshKingPos() {
+    this.kingPos = {
+      [SENTE]: this.findKing(SENTE),
+      [GOTE]: this.findKing(GOTE),
+    };
+  }
+
+  _trackKingMove(piece, from, to) {
+    if (piece.type !== 'K') return;
+    this.kingPos[piece.owner] = { y: to.y, x: to.x };
+  }
+
+  _trackKingUndo(piece, from) {
+    if (piece.type !== 'K') return;
+    this.kingPos[piece.owner] = { y: from.y, x: from.x };
+  }
+
+  _capturedHandType(captured) {
+    if (!captured) return null;
+    const demoteMap = { PS: 'S', PN: 'N', PL: 'L', PP: 'P', DR: 'R', DH: 'B' };
+    return captured.promoted
+      ? (demoteMap[captured.type] || captured.type)
+      : captured.type;
+  }
+
+  _saveUndo(move) {
+    const { from, to, drop, owner } = move;
+    if (drop) {
+      return {
+        move,
+        captured: null,
+        fromPiece: null,
+        handType: drop,
+        handCount: this.hands[owner][drop],
+        turn: this.turn,
+        gameOver: this.gameOver,
+        winner: this.winner,
+      };
+    }
+    const captured = this.board[to.y][to.x];
+    const capType = this._capturedHandType(captured);
+    return {
+      move,
+      captured: captured ? { ...captured } : null,
+      fromPiece: { ...this.board[from.y][from.x] },
+      handType: capType,
+      handCount: capType ? this.hands[owner][capType] : 0,
+      turn: this.turn,
+      gameOver: this.gameOver,
+      winner: this.winner,
+    };
+  }
+
+  _restoreUndo(undo) {
+    const { move, captured, fromPiece, handType, handCount, turn, gameOver, winner } = undo;
+    const { from, to, drop, owner } = move;
+
+    this.turn = turn;
+    this.gameOver = gameOver;
+    this.winner = winner;
+
+    if (drop) {
+      this.board[to.y][to.x] = null;
+      this.hands[owner][drop] = handCount;
+      return;
+    }
+
+    this.board[from.y][from.x] = fromPiece;
+    if (captured) {
+      this.board[to.y][to.x] = captured;
+      this.hands[owner][handType] = handCount;
+      this._trackKingUndo(fromPiece, from);
+    } else {
+      this.board[to.y][to.x] = null;
+      this._trackKingUndo(fromPiece, from);
+    }
+  }
+
+  /** 手を適用して合法性だけ確認（クローンなし） */
+  _isLegalMoveInPlace(move, owner) {
+    const undo = this._saveUndo(move);
+    this._executeMove(move);
+    const legal = !this.isInCheck(owner);
+    this._restoreUndo(undo);
+    return legal;
   }
 
   findKing(owner) {
@@ -207,7 +296,7 @@ export class ShogiBoard {
   }
 
   isInCheck(owner) {
-    const king = this.findKing(owner);
+    const king = this.kingPos?.[owner] || this.findKing(owner);
     if (!king) return true;
     return this.isSquareAttacked(king.y, king.x, this.opponent(owner));
   }
@@ -277,15 +366,13 @@ export class ShogiBoard {
       const captured = this.board[to.y][to.x];
       this.board[from.y][from.x] = null;
       if (captured) {
-        const demoteMap = { PS: 'S', PN: 'N', PL: 'L', PP: 'P', DR: 'R', DH: 'B' };
-        const capType = captured.promoted
-          ? (demoteMap[captured.type] || captured.type)
-          : captured.type;
+        const capType = this._capturedHandType(captured);
         this.hands[owner][capType] = (this.hands[owner][capType] || 0) + 1;
       }
       const newPiece = { ...piece };
       if (promote) newPiece.promoted = true;
       this.board[to.y][to.x] = newPiece;
+      this._trackKingMove(piece, from, to);
     }
     this.turn = this.opponent(owner);
   }
@@ -321,9 +408,8 @@ export class ShogiBoard {
       }
     }
 
-    const after = this._applyMoveOnClone(this, move);
-    if (after.isInCheck(owner)) return false;
-    return true;
+    const after = this._isLegalMoveInPlace(move, owner);
+    return after;
   }
 
   getLegalMoves(owner = this.turn) {
@@ -377,22 +463,76 @@ export class ShogiBoard {
     return true;
   }
 
+  undoLastMove() {
+    if (!this.moveHistory.length) return false;
+    const history = this.moveHistory.slice(0, -1);
+    this.reset();
+    for (const m of history) {
+      this.makeMove(m);
+    }
+    return true;
+  }
+
   evaluate(owner) {
     let score = 0;
+    const opp = this.opponent(owner);
+
     for (let y = 0; y < BOARD_SIZE; y++) {
       for (let x = 0; x < BOARD_SIZE; x++) {
         const p = this.board[y][x];
         if (!p) continue;
         const eff = this.effectiveType(p);
-        const val = PIECE[eff]?.value ?? 0;
+        const val = (PIECE[eff]?.value ?? 0) + this._positionalBonus(p, y, x);
         score += p.owner === owner ? val : -val;
       }
     }
     for (const type of HAND_TYPES) {
       const v = PIECE[type].value;
       score += (this.hands[owner][type] || 0) * v;
-      score -= (this.hands[this.opponent(owner)][type] || 0) * v;
+      score -= (this.hands[opp][type] || 0) * v;
     }
+    if (this.isInCheck(opp)) score += 200;
+    if (this.isInCheck(owner)) score -= 280;
     return score;
+  }
+
+  _positionalBonus(piece, y, x) {
+    const eff = this.effectiveType(piece);
+    const owner = piece.owner;
+    const adv = owner === SENTE ? (6 - y) : (y - 2);
+    let bonus = 0;
+
+    if (eff === 'P') bonus += Math.max(0, adv) * 12;
+    else if (eff === 'PP') bonus += Math.max(0, adv) * 6;
+    else if (eff === 'S' || eff === 'PS') bonus += Math.max(0, adv) * 5;
+    else if (eff === 'N' || eff === 'PN') bonus += Math.max(0, adv) * 3;
+    else if (eff === 'L' || eff === 'PL') bonus += Math.max(0, adv) * 2;
+
+    if (eff === 'R' || eff === 'DR' || eff === 'B' || eff === 'DH') {
+      bonus += (4 - Math.abs(x - 4)) * 4;
+    }
+    if (eff === 'G') {
+      const king = this.kingPos?.[owner];
+      if (king && Math.abs(king.x - x) <= 1 && Math.abs(king.y - y) <= 1) {
+        bonus += 15;
+      }
+    }
+    return bonus;
+  }
+
+  toSfen() {
+    return boardToSfen(this);
+  }
+
+  getUsiMoves() {
+    return this.moveHistory.map((m) => moveToUsiForHistory(m));
+  }
+
+  fromUsiMove(usi) {
+    return usiToMove(this, usi);
+  }
+
+  static initialSfen() {
+    return INITIAL_SFEN;
   }
 }

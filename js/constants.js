@@ -28,3 +28,17 @@ export const FILE_LABELS = ['9', '8', '7', '6', '5', '4', '3', '2', '1'];
 
 /** 段の表示 */
 export const RANK_LABELS = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+/** AI難易度（思考時間はバックエンド側で設定） */
+export const AI_LEVELS = [
+  { id: 'easy',   name: '初級' },
+  { id: 'normal', name: '中級' },
+  { id: 'hard',   name: '上級' },
+  { id: 'expert', name: '最強' },
+];
+
+export const DEFAULT_AI_LEVEL = 'normal';
+
+export function getAiLevel(id) {
+  return AI_LEVELS.find((l) => l.id === id) || AI_LEVELS.find((l) => l.id === DEFAULT_AI_LEVEL);
+}

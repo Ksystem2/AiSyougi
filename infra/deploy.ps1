@@ -20,7 +20,16 @@ aws s3 sync $Root "s3://$Bucket/$Prefix/" `
     --exclude "infra/*" `
     --exclude ".gitignore" `
     --exclude "cf-config.json" `
-    --exclude "deploy-wf.*"
+    --exclude "deploy-wf.*" `
+    --exclude "*.zip" `
+    --exclude "sticker-fn.js" `
+    --exclude "aisyougi-fn-live.js" `
+    --exclude "kakeibo-fn.zip" `
+    --exclude "out.zip" `
+    --exclude "backend/*" `
+    --exclude ".venv/*" `
+    --exclude "docker-compose.yml" `
+    --exclude ".dockerignore"
 
 $invalidation = aws cloudfront create-invalidation `
     --distribution-id $DistributionId `

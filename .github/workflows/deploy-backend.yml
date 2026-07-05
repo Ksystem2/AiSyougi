@@ -1,0 +1,67 @@
+name: Deploy AISyougi API (ECS)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "backend/**"
+      - "infra/terraform-aisyougi-api/**"
+      - "infra/apply-cloudfront-aisyougi-api-behavior.py"
+      - "infra/deploy-backend.ps1"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-northeast-1
+      ECR_REPOSITORY: aisyougi-api
+      ECS_CLUSTER: aisyougi-api-cluster
+      ECS_SERVICE: aisyougi-api-service
+      TF_DIR: infra/terraform-aisyougi-api
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::345362761619:role/aisyougi-api-github-actions-deploy-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${IMAGE_TAG}"
+          docker build -f backend/Dockerfile -t "$IMAGE_URI" -t "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" .
+          docker push "$IMAGE_URI"
+          docker push "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
+          echo "IMAGE_URI=$IMAGE_URI" >> "$GITHUB_ENV"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform apply
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          sed -i "s|container_image = \".*\"|container_image = \"${IMAGE_URI}\"|" terraform.tfvars
+          terraform init -input=false
+          terraform apply -auto-approve -input=false
+
+      - name: Wait for ECS service stable
+        run: |
+          aws ecs wait services-stable \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}" \
+            --region "${{ env.AWS_REGION }}"
+
+      - name: Configure CloudFront API route
+        run: python infra/apply-cloudfront-aisyougi-api-behavior.py

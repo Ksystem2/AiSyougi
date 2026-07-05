@@ -1,4 +1,5 @@
 import { SENTE, GOTE, PIECE, HAND_TYPES } from './constants.js';
+import { formatClock } from './clock.js';
 
 export class ShogiUI {
   /**
@@ -9,17 +10,27 @@ export class ShogiUI {
     this.board = board;
     this.onPlayerMove = callbacks.onPlayerMove;
     this.onNewGame = callbacks.onNewGame;
+    /** @type {import('./clock.js').GameClock|null} */
+    this.clock = null;
 
     this.selected = null;
     this.legalTargets = [];
     this.pendingPromotion = null;
     this.interactive = true;
+    this._clockTimer = null;
 
     this.boardEl = document.getElementById('board');
     this.senteHandEl = document.getElementById('sente-hand');
     this.goteHandEl = document.getElementById('gote-hand');
     this.aiIconEl = document.getElementById('ai-icon');
     this.statusEl = document.getElementById('status');
+    this.clockSenteEl = document.getElementById('clock-sente');
+    this.clockGoteEl = document.getElementById('clock-gote');
+    this.clockSenteLastEl = document.getElementById('clock-sente-last');
+    this.clockGoteLastEl = document.getElementById('clock-gote-last');
+    this.clockTotalEl = document.getElementById('clock-total');
+    this.clockRowSenteEl = document.getElementById('clock-row-sente');
+    this.clockRowGoteEl = document.getElementById('clock-row-gote');
     this.promoModal = document.getElementById('promotion-modal');
     this.promoYes = document.getElementById('promo-yes');
     this.promoNo = document.getElementById('promo-no');
@@ -27,6 +38,52 @@ export class ShogiUI {
 
     this._bindEvents();
     this.render();
+  }
+
+  setClock(clock) {
+    this.clock = clock;
+    this._startClockTimer();
+    this._renderClock();
+  }
+
+  _startClockTimer() {
+    if (this._clockTimer) clearInterval(this._clockTimer);
+    this._clockTimer = setInterval(() => {
+      if (this.clock && !this.board.gameOver) {
+        this._renderClock();
+      }
+    }, 1000);
+  }
+
+  _stopClockTimer() {
+    if (this._clockTimer) {
+      clearInterval(this._clockTimer);
+      this._clockTimer = null;
+    }
+  }
+
+  _renderLastMove(el, ms) {
+    if (!el) return;
+    el.textContent = ms > 0 ? `（直前 ${formatClock(ms)}）` : '';
+  }
+
+  _renderClock() {
+    if (!this.clock) return;
+
+    if (this.clockSenteEl) {
+      this.clockSenteEl.textContent = formatClock(this.clock.getTotalMs(SENTE));
+    }
+    if (this.clockGoteEl) {
+      this.clockGoteEl.textContent = formatClock(this.clock.getTotalMs(GOTE));
+    }
+    if (this.clockTotalEl) {
+      this.clockTotalEl.textContent = formatClock(this.clock.getGameTotalMs());
+    }
+    this._renderLastMove(this.clockSenteLastEl, this.clock.getLastMoveMs(SENTE));
+    this._renderLastMove(this.clockGoteLastEl, this.clock.getLastMoveMs(GOTE));
+
+    this.clockRowSenteEl?.classList.toggle('active', this.clock.isActive(SENTE));
+    this.clockRowGoteEl?.classList.toggle('active', this.clock.isActive(GOTE));
   }
 
   _bindEvents() {
@@ -44,11 +101,13 @@ export class ShogiUI {
     this._renderBoard();
     this._renderHands();
     this._renderStatus();
+    this._renderClock();
   }
 
   _renderStatus() {
     if (this.board.gameOver) {
       this.aiIconEl?.classList.remove('thinking');
+      this._renderClock();
       if (this.board.winner === SENTE) {
         this.statusEl.textContent = 'あなたの勝ち！';
       } else if (this.board.winner === GOTE) {
@@ -116,7 +175,7 @@ export class ShogiUI {
     container.innerHTML = '';
     const label = document.createElement('div');
     label.className = 'hand-label';
-    label.textContent = owner === SENTE ? '先手（あなた）' : '後手（AI）';
+    label.textContent = owner === SENTE ? '先手' : '後手';
     container.appendChild(label);
 
     const pieces = document.createElement('div');
