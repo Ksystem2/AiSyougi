@@ -14,7 +14,8 @@
   --ui-height: calc(238px + var(--debug-reserved));
   --cell-size: min(
     calc((100dvh - var(--ui-height)) / 9),
-    calc((100vw - 1rem) / 9.2)
+    calc((100vw - 1.5rem) / 9.2),
+    46px
   );
   --piece-bg: #f5e6c8;
   --piece-border: #8b6914;
@@ -40,7 +41,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: center;
   padding: 0;
 }
 
@@ -53,7 +54,7 @@ body.debug-expanded {
 }
 
 .app {
-  width: 100%;
+  width: min(100%, calc(var(--cell-size) * 9 + 1.5rem));
   max-width: 100%;
   flex: 1;
   min-height: 0;
@@ -63,6 +64,7 @@ body.debug-expanded {
   gap: 0.08rem;
   overflow: hidden;
   padding: 0.08rem 0.3rem 0.06rem;
+  margin: 0 auto;
 }
 
 .top-bar {
@@ -239,7 +241,8 @@ body.debug-expanded {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(calc(var(--cell-size) * 9 + 1.1rem), 100%);
+  width: calc(var(--cell-size) * 9 + 1.1rem);
+  max-width: 100%;
 }
 
 .file-labels {
@@ -473,20 +476,6 @@ body.debug-expanded {
 
   .level-select {
     padding: 0.12rem 0.3rem;
-  }
-}
-
-@media (min-width: 520px) {
-  :root {
-    --cell-size: min(
-      calc((100dvh - var(--ui-height)) / 9),
-      calc((480px - 1rem) / 9.2)
-    );
-  }
-
-  .app {
-    max-width: 480px;
-    margin: 0 auto;
   }
 }
 
