@@ -35,14 +35,14 @@ body {
 
 .app {
   width: 100%;
-  height: 100dvh;
+  min-height: 0;
   max-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.04rem;
+  gap: 0.02rem;
   overflow: hidden;
-  padding: 0.04rem 0.25rem 0.04rem;
+  padding: 0.02rem 0.25rem 0;
 }
 
 .top-section {
@@ -316,7 +316,6 @@ body {
   align-items: center;
   gap: 0.2rem;
   width: 100%;
-  margin-top: auto;
 }
 
 .level-select {

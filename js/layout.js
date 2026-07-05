@@ -15,24 +15,38 @@ export function initResponsiveLayout() {
 
     const vh = window.visualViewport?.height ?? window.innerHeight;
     const vw = window.visualViewport?.width ?? window.innerWidth;
+    const debugH = debug?.getBoundingClientRect().height ?? 0;
 
     let chrome = app.offsetTop;
-    for (const el of [top, gote, fileLabels, sente, controls, debug]) {
+    for (const el of [top, gote, fileLabels, sente, controls]) {
       if (el) chrome += el.getBoundingClientRect().height;
     }
 
-    const gaps = 10;
-    const fromHeight = (vh - chrome - gaps) / 9;
+    const gaps = 4;
+    const fromHeight = (vh - debugH - chrome - gaps) / 9;
     const fromWidth = (vw - 16) / 9.2;
     return Math.max(22, Math.min(fromHeight, fromWidth));
   }
 
   function apply() {
     root.style.setProperty('--cell-size', '40px');
-    const first = measureOnce();
-    root.style.setProperty('--cell-size', `${first}px`);
-    const second = measureOnce();
-    root.style.setProperty('--cell-size', `${second}px`);
+    let cell = measureOnce();
+    root.style.setProperty('--cell-size', `${cell}px`);
+    cell = measureOnce();
+    root.style.setProperty('--cell-size', `${cell}px`);
+
+    const app = document.querySelector('.app');
+    const debug = document.getElementById('debug-panel');
+    if (!app) return;
+
+    const debugH = debug?.getBoundingClientRect().height ?? 0;
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+    const usedBottom = app.getBoundingClientRect().bottom;
+    const slack = vh - debugH - usedBottom;
+    if (slack > 0.5) {
+      cell += slack / 9;
+      root.style.setProperty('--cell-size', `${cell}px`);
+    }
   }
 
   const schedule = () => requestAnimationFrame(apply);
