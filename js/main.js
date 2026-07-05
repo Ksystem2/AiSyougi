@@ -31,17 +31,15 @@ function init() {
   ui.setClock(clock);
   ui.setInteractive(true);
   setupLevelSelect();
+  clock.startTurn(SENTE);
+  ui.render();
   verifyEngine();
 }
 
 async function verifyEngine() {
-  try {
-    const health = await checkEngineHealth();
-    if (!health.engine_ready) {
-      ui.statusEl.textContent = 'AIエンジン準備中…';
-    }
-  } catch {
-    ui.statusEl.textContent = 'AI接続を確認中…';
+  const health = await checkEngineHealth();
+  if (!health.engine_ready) {
+    ui.statusEl.textContent = 'AIエンジン準備中…（対局は可能）';
   }
   ui.render();
 }

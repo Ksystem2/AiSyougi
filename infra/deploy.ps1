@@ -10,6 +10,9 @@ param(
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
+python (Join-Path $PSScriptRoot "ensure-utf8.py")
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 Write-Host "Deploying AiSyougi to s3://$Bucket/$Prefix/ ..."
 
 aws s3 sync $Root "s3://$Bucket/$Prefix/" `
@@ -19,6 +22,7 @@ aws s3 sync $Root "s3://$Bucket/$Prefix/" `
     --exclude ".github/*" `
     --exclude "infra/*" `
     --exclude ".gitignore" `
+    --exclude ".gitattributes" `
     --exclude "cf-config.json" `
     --exclude "deploy-wf.*" `
     --exclude "*.zip" `

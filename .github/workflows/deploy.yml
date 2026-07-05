@@ -19,6 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Ensure UTF-8 sources
+        run: python infra/ensure-utf8.py
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -32,7 +35,7 @@ jobs:
             --exclude ".git/*" \
             --exclude ".github/*" \
             --exclude "infra/*" \
-            --exclude ".gitignore" \
+            --exclude ".gitignore" \`n            --exclude ".gitattributes" \
             --exclude "*.zip" \
             --exclude "sticker-fn.js" \
             --exclude "aisyougi-fn-live.js" \

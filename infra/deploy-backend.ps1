@@ -15,18 +15,8 @@ $Root = Split-Path -Parent $PSScriptRoot
 $TfDir = Join-Path $PSScriptRoot "terraform-aisyougi-api"
 
 function Ensure-Utf8PythonFiles {
-    python -c @"
-from pathlib import Path
-root = Path(r'$Root')
-for p in root.rglob('*'):
-    if p.suffix.lower() not in {'.py', '.tf', '.tfvars', '.yml', '.yaml', '.ps1'}:
-        continue
-    if not p.is_file():
-        continue
-    raw = p.read_bytes()
-    if len(raw) >= 2 and raw[1] == 0 and raw[0] < 128:
-        p.write_text(raw.decode('utf-16-le'), encoding='utf-8', newline='\n')
-"@
+    python (Join-Path $PSScriptRoot "ensure-utf8.py")
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
 Ensure-Utf8PythonFiles
