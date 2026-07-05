@@ -17,7 +17,7 @@ REGION = "us-east-1"
 PATH_PATTERN = "/api/aisyougi*"
 ORIGIN_ID = "aisyougi-ecs-origin"
 ORIGIN_DOMAIN = "origin-aisyougi-ecs.ksystemapp.com"
-ORIGIN_PORT = 8000
+ORIGIN_PORT = 80
 
 CACHE_POLICY_ID = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
 ORIGIN_REQUEST_POLICY_ID = "216adef6-5c7f-47e4-b989-5492eafa07d3"
@@ -34,8 +34,14 @@ def aws(*args: str) -> str:
 def ensure_origin(config: dict) -> bool:
     origins = config.setdefault("Origins", {"Quantity": 0, "Items": []})
     items = list(origins.get("Items") or [])
-    if any(o.get("Id") == ORIGIN_ID for o in items):
-        return False
+
+    for origin in items:
+        if origin.get("Id") == ORIGIN_ID:
+            cfg = origin.setdefault("CustomOriginConfig", {})
+            if cfg.get("HTTPPort") != ORIGIN_PORT:
+                cfg["HTTPPort"] = ORIGIN_PORT
+                return True
+            return False
 
     items.append(
         {

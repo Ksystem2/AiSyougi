@@ -239,6 +239,7 @@ data "aws_iam_policy_document" "github_actions_deploy" {
       "route53:GetHostedZone",
       "route53:ListResourceRecordSets",
       "route53:ChangeResourceRecordSets",
+      "route53:ListTagsForResource",
       "cloudfront:CreateInvalidation",
       "cloudfront:GetDistribution",
       "cloudfront:UpdateDistribution",
