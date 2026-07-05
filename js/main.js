@@ -4,6 +4,20 @@ import { GameClock } from './clock.js';
 import { fetchBestMove, checkEngineHealth, AiCancelledError } from './api.js';
 import { INITIAL_SFEN } from './sfen.js';
 import { SENTE, GOTE, AI_LEVELS, DEFAULT_AI_LEVEL, getAiLevel } from './constants.js';
+import {
+  installGlobalErrorHandlers,
+  mountDebugPanel,
+  setDebugInit,
+  setDebugEngine,
+  setDebugPosition,
+  setDebugError,
+  isDebugMode,
+} from './debug.js';
+
+installGlobalErrorHandlers();
+if (isDebugMode()) {
+  mountDebugPanel();
+}
 
 const LEVEL_STORAGE_KEY = 'aisyougi-ai-level';
 
@@ -22,26 +36,42 @@ function loadAiLevel() {
   }
 }
 
+function updateDebugPosition() {
+  if (!board) return;
+  setDebugPosition(INITIAL_SFEN, board.getUsiMoves());
+}
+
 function init() {
-  loadAiLevel();
-  board = new ShogiBoard();
-  clock = new GameClock();
-  ui = new ShogiUI(board, {
-    onPlayerMove: handlePlayerMove,
-    onNewGame: startNewGame,
-  });
-  ui.setClock(clock);
-  ui.setInteractive(true);
-  setupLevelSelect();
-  setupCancelButton();
-  clock.startTurn(SENTE);
-  ui.render();
-  verifyEngine();
+  try {
+    loadAiLevel();
+    board = new ShogiBoard();
+    clock = new GameClock();
+    ui = new ShogiUI(board, {
+      onPlayerMove: handlePlayerMove,
+      onNewGame: startNewGame,
+    });
+    ui.setClock(clock);
+    ui.setInteractive(true);
+    setupLevelSelect();
+    setupCancelButton();
+    clock.startTurn(SENTE);
+    ui.render();
+    updateDebugPosition();
+    setDebugInit('OK');
+    verifyEngine();
+  } catch (err) {
+    setDebugInit('FAILED');
+    setDebugError(err.message || String(err));
+    throw err;
+  }
 }
 
 async function verifyEngine() {
   const health = await checkEngineHealth();
-  if (!health.engine_ready) {
+  if (health.engine_ready) {
+    setDebugEngine(`ready (${health.engine_path || 'unknown'})`);
+  } else {
+    setDebugEngine('not ready');
     ui.statusEl.textContent = 'AIエンジン準備中…（対局は可能）';
   }
   ui.render();
@@ -94,6 +124,7 @@ function startNewGame() {
   ui.setInteractive(true);
   setLevelSelectEnabled(true);
   ui.render();
+  updateDebugPosition();
 }
 
 function handlePlayerMove(move) {
@@ -108,6 +139,7 @@ function handlePlayerMove(move) {
 
   setLevelSelectEnabled(false);
   ui.render();
+  updateDebugPosition();
 
   if (board.gameOver) {
     ui.setInteractive(false);
@@ -157,6 +189,7 @@ async function runAI() {
       ui.statusEl.textContent = '思考を中断しました';
     } else {
       board.undoLastMove();
+      setDebugError(err.message || String(err));
       ui.statusEl.textContent = err.message?.includes('Engine not found')
         ? 'AIエンジン未設定'
         : (err.message || 'AI接続エラー');
@@ -179,6 +212,7 @@ async function runAI() {
   if (board.gameOver) {
     setLevelSelectEnabled(true);
   }
+  updateDebugPosition();
   ui.render();
 }
 

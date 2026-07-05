@@ -1,5 +1,6 @@
 import { getAiLevel } from './constants.js';
 import { INITIAL_SFEN } from './sfen.js';
+import { isDebugMode, setDebugApiBase } from './debug.js';
 
 const API_BASE = (() => {
   const host = location.hostname;
@@ -8,6 +9,10 @@ const API_BASE = (() => {
   }
   return 'https://ksystemapp.com';
 })();
+
+if (isDebugMode()) {
+  setDebugApiBase(API_BASE);
+}
 
 const THINK_TIMEOUT_MS = 65000;
 

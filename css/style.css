@@ -475,3 +475,73 @@ body {
     margin: 0 auto;
   }
 }
+
+.boot-error {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: #922b21;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.debug-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  max-height: 40vh;
+  overflow: auto;
+  background: rgba(10, 8, 6, 0.95);
+  border-top: 1px solid #5a4632;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.68rem;
+  color: #d7ccb8;
+}
+
+.debug-panel.collapsed .debug-panel-body {
+  display: none;
+}
+
+.debug-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  background: #2c2218;
+  position: sticky;
+  top: 0;
+}
+
+.debug-toggle {
+  font-family: inherit;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #5a4632;
+  background: #3d2e1f;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.debug-panel-body {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.15rem 0.5rem;
+  padding: 0.45rem 0.6rem 0.6rem;
+  margin: 0;
+}
+
+.debug-panel-body dt {
+  opacity: 0.7;
+}
+
+.debug-panel-body dd {
+  margin: 0;
+  word-break: break-all;
+}
