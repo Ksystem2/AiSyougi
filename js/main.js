@@ -1,7 +1,7 @@
 import { ShogiBoard } from './board.js';
 import { ShogiUI } from './ui.js';
 import { GameClock } from './clock.js';
-import { fetchBestMove } from './api.js';
+import { fetchBestMove, checkEngineHealth } from './api.js';
 import { INITIAL_SFEN } from './sfen.js';
 import { SENTE, GOTE, AI_LEVELS, DEFAULT_AI_LEVEL, getAiLevel } from './constants.js';
 
@@ -31,6 +31,19 @@ function init() {
   ui.setClock(clock);
   ui.setInteractive(true);
   setupLevelSelect();
+  verifyEngine();
+}
+
+async function verifyEngine() {
+  try {
+    const health = await checkEngineHealth();
+    if (!health.engine_ready) {
+      ui.statusEl.textContent = 'AIエンジン準備中…';
+    }
+  } catch {
+    ui.statusEl.textContent = 'AI接続を確認中…';
+  }
+  ui.render();
 }
 
 function setupLevelSelect() {
@@ -117,8 +130,8 @@ async function runAI() {
     console.error(err);
     board.undoLastMove();
     ui.statusEl.textContent = err.message?.includes('Engine not found')
-      ? 'AIエンジン未設定（YANEURAOU_PATH）'
-      : 'AI接続エラー（バックエンド未起動？）';
+      ? 'AIエンジン未設定'
+      : 'AI接続エラー';
     clock.stopTurn();
     clock.startTurn(SENTE);
     setLevelSelectEnabled(true);
