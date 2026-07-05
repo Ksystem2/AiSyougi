@@ -63,8 +63,7 @@ export function mountDebugPanel() {
     <dl class="debug-panel-body"></dl>
   `;
 
-  const app = document.querySelector('.app');
-  (app || document.body).appendChild(panelEl);
+  document.body.appendChild(panelEl);
 
   panelEl.querySelector('#debug-toggle')?.addEventListener('click', () => {
     panelEl?.classList.toggle('collapsed');
