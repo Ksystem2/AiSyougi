@@ -35,6 +35,7 @@ export class ShogiUI {
     this.promoYes = document.getElementById('promo-yes');
     this.promoNo = document.getElementById('promo-no');
     this.newGameBtn = document.getElementById('new-game');
+    this.cancelAiBtn = document.getElementById('cancel-ai');
 
     this._bindEvents();
     this.render();
@@ -97,6 +98,10 @@ export class ShogiUI {
     this.boardEl.classList.toggle('disabled', !enabled);
   }
 
+  setAiThinking(thinking) {
+    this.cancelAiBtn?.classList.toggle('hidden', !thinking);
+  }
+
   render() {
     this._renderBoard();
     this._renderHands();
@@ -124,7 +129,7 @@ export class ShogiUI {
         : 'あなたの番';
     } else {
       this.aiIconEl?.classList.add('thinking');
-      this.statusEl.textContent = 'AIが考え中…';
+      this.statusEl.textContent = 'AIが考え中…（中断可）';
     }
   }
 

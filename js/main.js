@@ -1,7 +1,7 @@
 import { ShogiBoard } from './board.js';
 import { ShogiUI } from './ui.js';
 import { GameClock } from './clock.js';
-import { fetchBestMove, checkEngineHealth } from './api.js';
+import { fetchBestMove, checkEngineHealth, AiCancelledError } from './api.js';
 import { INITIAL_SFEN } from './sfen.js';
 import { SENTE, GOTE, AI_LEVELS, DEFAULT_AI_LEVEL, getAiLevel } from './constants.js';
 
@@ -12,6 +12,8 @@ let ui;
 let clock;
 let aiThinking = false;
 let aiLevelId = DEFAULT_AI_LEVEL;
+let aiAbortController = null;
+let aiRunId = 0;
 
 function loadAiLevel() {
   const saved = localStorage.getItem(LEVEL_STORAGE_KEY);
@@ -31,6 +33,7 @@ function init() {
   ui.setClock(clock);
   ui.setInteractive(true);
   setupLevelSelect();
+  setupCancelButton();
   clock.startTurn(SENTE);
   ui.render();
   verifyEngine();
@@ -68,8 +71,22 @@ function setLevelSelectEnabled(enabled) {
   if (select) select.disabled = !enabled;
 }
 
+function setupCancelButton() {
+  const btn = document.getElementById('cancel-ai');
+  if (!btn) return;
+  btn.addEventListener('click', cancelAIThinking);
+}
+
+function cancelAIThinking() {
+  if (!aiThinking) return;
+  aiAbortController?.abort();
+}
+
 function startNewGame() {
+  aiRunId += 1;
+  aiAbortController?.abort();
   aiThinking = false;
+  ui.setAiThinking(false);
   board.reset();
   clock.reset();
   clock.startTurn(SENTE);
@@ -105,7 +122,11 @@ function handlePlayerMove(move) {
 }
 
 async function runAI() {
+  const runId = aiRunId + 1;
+  aiRunId = runId;
+  aiAbortController = new AbortController();
   aiThinking = true;
+  ui.setAiThinking(true);
   ui.setInteractive(false);
   ui.render();
 
@@ -114,7 +135,10 @@ async function runAI() {
       sfen: INITIAL_SFEN,
       moves: board.getUsiMoves(),
       level: aiLevelId,
+      signal: aiAbortController.signal,
     });
+
+    if (runId !== aiRunId) return;
 
     clock.stopTurn();
     const move = board.fromUsiMove(usi_move);
@@ -125,17 +149,28 @@ async function runAI() {
       ui.statusEl.textContent = 'AIの手が不正です';
     }
   } catch (err) {
+    if (runId !== aiRunId) return;
+
     console.error(err);
-    board.undoLastMove();
-    ui.statusEl.textContent = err.message?.includes('Engine not found')
-      ? 'AIエンジン未設定'
-      : 'AI接続エラー';
+    if (err instanceof AiCancelledError) {
+      board.undoLastMove();
+      ui.statusEl.textContent = '思考を中断しました';
+    } else {
+      board.undoLastMove();
+      ui.statusEl.textContent = err.message?.includes('Engine not found')
+        ? 'AIエンジン未設定'
+        : (err.message || 'AI接続エラー');
+    }
     clock.stopTurn();
     clock.startTurn(SENTE);
     setLevelSelectEnabled(true);
   }
 
+  if (runId !== aiRunId) return;
+
+  aiAbortController = null;
   aiThinking = false;
+  ui.setAiThinking(false);
   ui.setInteractive(!board.gameOver);
 
   if (!board.gameOver && board.turn === SENTE) {

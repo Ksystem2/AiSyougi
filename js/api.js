@@ -11,21 +11,32 @@ const API_BASE = (() => {
 
 const THINK_TIMEOUT_MS = 65000;
 
-async function fetchJson(url, options = {}, timeoutMs = 15000) {
+export class AiCancelledError extends Error {
+  constructor() {
+    super('AI思考を中断しました');
+    this.name = 'AiCancelledError';
+  }
+}
+
+async function fetchJson(url, options = {}, timeoutMs = 15000, externalSignal = null) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onExternalAbort = () => controller.abort();
+  externalSignal?.addEventListener('abort', onExternalAbort, { once: true });
+
   try {
     const res = await fetch(url, { ...options, signal: controller.signal });
     return res;
   } finally {
     clearTimeout(timer);
+    externalSignal?.removeEventListener('abort', onExternalAbort);
   }
 }
 
 /**
- * @param {{ sfen?: string, moves?: string[], level?: string }} params
+ * @param {{ sfen?: string, moves?: string[], level?: string, signal?: AbortSignal }} params
  */
-export async function fetchBestMove({ sfen = INITIAL_SFEN, moves = [], level = 'normal' }) {
+export async function fetchBestMove({ sfen = INITIAL_SFEN, moves = [], level = 'normal', signal } = {}) {
   let res;
   try {
     res = await fetchJson(
@@ -36,9 +47,13 @@ export async function fetchBestMove({ sfen = INITIAL_SFEN, moves = [], level = '
         body: JSON.stringify({ sfen, moves, level }),
       },
       THINK_TIMEOUT_MS,
+      signal,
     );
   } catch (err) {
     if (err.name === 'AbortError') {
+      if (signal?.aborted) {
+        throw new AiCancelledError();
+      }
       throw new Error('AI思考がタイムアウトしました');
     }
     throw err;

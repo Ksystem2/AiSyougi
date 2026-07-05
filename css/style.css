@@ -401,6 +401,14 @@ body {
   color: var(--text);
 }
 
+.btn-secondary:hover {
+  background: #6d563f;
+}
+
+.hidden {
+  display: none !important;
+}
+
 .modal {
   position: fixed;
   inset: 0;
