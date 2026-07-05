@@ -50,22 +50,28 @@ export function setDebugError(message) {
 export function mountDebugPanel() {
   if (!IS_LOCAL || panelEl) return;
 
+  document.body.classList.add('debug-mode');
+
   panelEl = document.createElement('aside');
   panelEl.id = 'debug-panel';
-  panelEl.className = 'debug-panel';
+  panelEl.className = 'debug-panel collapsed';
   panelEl.innerHTML = `
     <div class="debug-panel-header">
       <strong>開発デバッグ</strong>
-      <button type="button" id="debug-toggle" class="debug-toggle">閉じる</button>
+      <button type="button" id="debug-toggle" class="debug-toggle">開く</button>
     </div>
     <dl class="debug-panel-body"></dl>
   `;
-  document.body.appendChild(panelEl);
+
+  const app = document.querySelector('.app');
+  (app || document.body).appendChild(panelEl);
 
   panelEl.querySelector('#debug-toggle')?.addEventListener('click', () => {
     panelEl?.classList.toggle('collapsed');
+    const collapsed = panelEl?.classList.contains('collapsed');
+    document.body.classList.toggle('debug-expanded', !collapsed);
     const btn = panelEl?.querySelector('#debug-toggle');
-    if (btn) btn.textContent = panelEl?.classList.contains('collapsed') ? '開く' : '閉じる';
+    if (btn) btn.textContent = collapsed ? '開く' : '閉じる';
   });
 
   render();
