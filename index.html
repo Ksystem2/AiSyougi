@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>AI将棋</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/style.css?v=20260706l">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
@@ -15,9 +15,11 @@
       <header class="top-bar">
         <div class="top-bar-title">
           <h1>AI将棋</h1>
-          <p class="subtitle">先手 vs 後手（AI）</p>
+          <p class="subtitle" id="subtitle">先手 vs 後手（AI）</p>
         </div>
         <div id="status" class="status">あなたの番</div>
+        <button id="cancel-ai" type="button" class="btn-secondary btn-compact hidden">思考中断</button>
+        <button id="retry-ai" type="button" class="btn-secondary btn-compact hidden">AI再試行</button>
       </header>
 
       <div id="clock-panel" class="clock-panel">
@@ -39,43 +41,74 @@
     </div>
 
     <div class="game-area">
-      <div class="gote-area">
-        <img
-          id="ai-icon"
-          class="ai-icon"
-          src="./assets/ai-icon.png"
-          alt="AI対戦相手"
-          width="40"
-          height="40"
-        >
-        <div id="gote-hand" class="hand gote-hand"></div>
-      </div>
-
-      <div class="board-wrapper">
-        <div class="board-labels">
-          <div class="file-labels">
-            <span>9</span><span>8</span><span>7</span><span>6</span><span>5</span>
-            <span>4</span><span>3</span><span>2</span><span>1</span>
-          </div>
-          <div class="board-with-ranks">
-            <div class="rank-labels">
-              <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span>
-              <span>六</span><span>七</span><span>八</span><span>九</span>
+      <div class="board-row">
+        <div class="board-wrapper">
+          <div class="board-labels">
+            <div class="file-labels">
+              <span>9</span><span>8</span><span>7</span><span>6</span><span>5</span>
+              <span>4</span><span>3</span><span>2</span><span>1</span>
             </div>
-            <div id="board" class="board"></div>
+            <div class="board-with-ranks">
+              <div class="rank-labels">
+                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span>
+                <span>六</span><span>七</span><span>八</span><span>九</span>
+              </div>
+              <div id="board" class="board"></div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="sente-hand" class="hand sente-hand"></div>
+        <aside class="hands-panel" id="hands-panel" aria-label="持ち駒">
+          <div id="match-mode-banner" class="match-mode-banner hidden" aria-hidden="true">AI vs AI</div>
+
+          <div class="player-block gote-area">
+            <div class="ai-player" id="gote-player">
+              <img
+                id="gote-ai-icon"
+                class="ai-icon gote-ai-icon"
+                src="./assets/ai-icon.png"
+                alt="後手AI"
+                width="40"
+                height="40"
+              >
+              <span class="ai-player-name gote-ai-name">AI：バスタリズム</span>
+            </div>
+            <div id="gote-hand" class="hand gote-hand"></div>
+          </div>
+
+          <div id="ai-vs-divider" class="ai-vs-divider hidden" aria-hidden="true">VS</div>
+
+          <div class="player-block sente-player-block">
+            <div class="ai-player hidden" id="sente-player">
+              <img
+                id="sente-ai-icon"
+                class="ai-icon sente-ai-icon"
+                src="./assets/sente-icon.png"
+                alt="先手AI"
+                width="40"
+                height="40"
+              >
+              <span class="ai-player-name sente-ai-name">AI：バスタリズム</span>
+            </div>
+            <div id="sente-hand" class="hand sente-hand"></div>
+          </div>
+        </aside>
+      </div>
     </div>
 
     <div class="controls">
-      <div class="level-select">
+      <div class="mode-select control-select">
+        <label for="game-mode">対局</label>
+        <select id="game-mode" aria-label="対局モード">
+          <option value="human">あなた vs AI</option>
+          <option value="ai-vs-ai">AI vs AI</option>
+        </select>
+      </div>
+      <div class="level-select control-select">
         <label for="ai-level">AI</label>
         <select id="ai-level" aria-label="AIの強さ"></select>
       </div>
-      <button id="cancel-ai" type="button" class="btn-secondary hidden">思考中断</button>
+      <button id="bgm-toggle" type="button" class="btn-secondary btn-compact" aria-pressed="false" aria-label="BGMをオンにする">BGM OFF</button>
       <button id="new-game" type="button" class="btn-primary">新しい対局</button>
     </div>
   </div>
@@ -90,6 +123,6 @@
     </div>
   </div>
 
-  <script type="module" src="./js/main.js"></script>
+  <script type="module" src="./js/main.js?v=20260706l"></script>
 </body>
 </html>

@@ -39,6 +39,15 @@ export const AI_LEVELS = [
 
 export const DEFAULT_AI_LEVEL = 'normal';
 
+/** 対局モード */
+export const GAME_MODE_HUMAN = 'human';
+export const GAME_MODE_AI_VS_AI = 'ai-vs-ai';
+export const DEFAULT_GAME_MODE = GAME_MODE_HUMAN;
+
+/** AIキャラクター表示名 */
+export const AI_CHARACTER_NAME = 'バスタリズム';
+export const AI_DISPLAY_NAME = `AI：${AI_CHARACTER_NAME}`;
+
 export function getAiLevel(id) {
   return AI_LEVELS.find((l) => l.id === id) || AI_LEVELS.find((l) => l.id === DEFAULT_AI_LEVEL);
 }

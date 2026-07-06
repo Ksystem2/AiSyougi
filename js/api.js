@@ -39,9 +39,15 @@ async function fetchJson(url, options = {}, timeoutMs = 15000, externalSignal = 
 }
 
 /**
- * @param {{ sfen?: string, moves?: string[], level?: string, signal?: AbortSignal }} params
+ * @param {{ sfen?: string, moves?: string[], level?: string, signal?: AbortSignal, timeoutMs?: number }} params
  */
-export async function fetchBestMove({ sfen = INITIAL_SFEN, moves = [], level = 'normal', signal } = {}) {
+export async function fetchBestMove({
+  sfen = INITIAL_SFEN,
+  moves = [],
+  level = 'normal',
+  signal,
+  timeoutMs = THINK_TIMEOUT_MS,
+} = {}) {
   let res;
   try {
     res = await fetchJson(
@@ -51,7 +57,7 @@ export async function fetchBestMove({ sfen = INITIAL_SFEN, moves = [], level = '
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sfen, moves, level }),
       },
-      THINK_TIMEOUT_MS,
+      timeoutMs,
       signal,
     );
   } catch (err) {
