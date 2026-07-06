@@ -32,6 +32,9 @@ aws s3 sync $Root "s3://$Bucket/$Prefix/" `
     --exclude "out.zip" `
     --exclude "backend/*" `
     --exclude ".venv/*" `
+    --exclude "node_modules/*" `
+    --exclude "package.json" `
+    --exclude "package-lock.json" `
     --exclude "docker-compose.yml" `
     --exclude ".dockerignore"
 
