@@ -29,6 +29,7 @@ class ThinkRequest(BaseModel):
     sfen: str = Field(default=INITIAL_SFEN, description="局面 SFEN")
     moves: list[str] = Field(default_factory=list, description="USI形式の手順")
     level: str = Field(default="normal", description="easy|normal|hard|expert")
+    movetime_ms: int | None = Field(default=None, description="1手の思考時間（ミリ秒）")
 
 
 class ThinkResponse(BaseModel):
@@ -60,11 +61,16 @@ def health():
 
 @app.post("/api/aisyougi/think", response_model=ThinkResponse)
 def think(req: ThinkRequest):
-    movetime = LEVEL_MOVETIME_MS.get(req.level, LEVEL_MOVETIME_MS["normal"])
+    if req.movetime_ms and req.movetime_ms > 0:
+        movetime = req.movetime_ms
+    else:
+        movetime = LEVEL_MOVETIME_MS.get(req.level, LEVEL_MOVETIME_MS["normal"])
+
+    timeout_sec = max(60.0, movetime / 1000 + 30)
 
     try:
         engine = get_engine()
-        usi_move = engine.bestmove(req.sfen, req.moves, movetime)
+        usi_move = engine.bestmove(req.sfen, req.moves, movetime, timeout_sec=timeout_sec)
     except UsiEngineError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
